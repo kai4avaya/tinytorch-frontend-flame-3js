@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Torch Scroll</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: #fafafa;
+            overflow-x: hidden;
+        }
+        
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 1;
+        }
+        
+        #content {
+            position: relative;
+            z-index: 2;
+            height: 500vh;
+            pointer-events: none;
+        }
+        
+        /* Menu Styles */
+        #menu-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            border: 2px solid #ddd;
+            cursor: pointer;
+            z-index: 1000;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        #menu-toggle span {
+            width: 24px;
+            height: 2px;
+            background: #ccc;
+            transition: all 0.3s ease;
+        }
+        
+        #menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+        
+        #menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        #menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+        
+        #slide-menu {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            border-right: 2px solid #ddd;
+            z-index: 999;
+            transition: left 0.3s ease;
+            pointer-events: auto;
+            padding: 80px 30px 30px;
+        }
+        
+        #slide-menu.active {
+            left: 0;
+        }
+        
+        #slide-menu ul {
+            list-style: none;
+        }
+        
+        #slide-menu li {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        #slide-menu a {
+            color: #666;
+            text-decoration: none;
+            font-size: 18px;
+            display: block;
+            transition: all 0.2s;
+        }
+        
+        #slide-menu a:hover {
+            padding-left: 10px;
+            color: #333;
+        }
+        
+        .info {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #999;
+            pointer-events: auto;
+        }
+        
+        h1 {
+            font-size: 3em;
+            margin-bottom: 0.5em;
+            font-weight: normal;
+            letter-spacing: 2px;
+        }
+        
+        p {
+            font-size: 1em;
+            opacity: 0.7;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div id="menu-toggle">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+    
+    <div id="slide-menu">
+        <ul>
+            <li><a href="#home">HOME</a></li>
+            <li><a href="#about">ABOUT</a></li>
+            <li><a href="#projects">PROJECTS</a></li>
+            <li><a href="#code">CODE</a></li>
+            <li><a href="#contact">CONTACT</a></li>
+        </ul>
+    </div>
+    
+    <div id="canvas-container"></div>
+    <div id="content">
+        <div class="info">
+            <h1>[ SCROLL ]</h1>
+            <p>— Explore the Flame —</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Menu functionality
+        const menuToggle = document.getElementById('menu-toggle');
+        const slideMenu = document.getElementById('slide-menu');
+        
+        menuToggle.addEventListener('click', () => {
+            menuToggle.classList.toggle('active');
+            slideMenu.classList.toggle('active');
+        });
+        
+        // Three.js
+        let scene, camera, renderer, torch, flameGroup;
+        let scrollProgress = 0;
+        let particles = [];
+        let codeTexts = [];
+        
+        const codeSnippets = [
+            'function ignite() {',
+            '  let heat = 1000;',
+            '  return burn(heat);',
+            '}',
+            'const flame = {',
+            '  temp: 1500,',
+            '  color: "orange"',
+            '};',
+            'while(burning) {',
+            '  flicker();',
+            '  emit(light);',
+            '}',
+            'class Fire {',
+            '  constructor() {',
+            '    this.alive = true;',
+            '  }',
+            '}',
+            'render(flame);'
+        ];
+        
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xfafafa);
+            
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 4, 12);
+            camera.lookAt(0, 3, 0);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            const light = new THREE.DirectionalLight(0xffffff, 0.6);
+            light.position.set(5, 10, 5);
+            scene.add(light);
+            
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            // Create rolling hills terrain
+            const groundGeometry = new THREE.PlaneGeometry(30, 30, 40, 40);
+            const vertices = groundGeometry.attributes.position.array;
+            
+            for (let i = 0; i < vertices.length; i += 3) {
+                const x = vertices[i];
+                const y = vertices[i + 1];
+                
+                const height = 
+                    Math.sin(x * 0.3) * 0.8 + 
+                    Math.cos(y * 0.4) * 0.6 +
+                    Math.sin(x * 0.15 + y * 0.15) * 1.2 +
+                    Math.cos(x * 0.5) * Math.sin(y * 0.5) * 0.5;
+                
+                vertices[i + 2] = height;
+            }
+            
+            groundGeometry.attributes.position.needsUpdate = true;
+            groundGeometry.computeVertexNormals();
+            
+            const groundMaterial = new THREE.MeshBasicMaterial({
+                color: 0xcccccc,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.4
+            });
+            
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -0.5;
+            scene.add(ground);
+            
+            // Create Torch
+            torch = new THREE.Group();
+            
+            // Shortened torch handle
+            const handleGeometry = new THREE.CylinderGeometry(0.12, 0.15, 1.5, 8);
+            const handleMaterial = new THREE.MeshBasicMaterial({
+                color: 0xcccccc,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.5
+            });
+            const handle = new THREE.Mesh(handleGeometry, handleMaterial);
+            handle.position.y = 0.75;
+            torch.add(handle);
+            
+            // Torch top
+            const topGeometry = new THREE.CylinderGeometry(0.2, 0.12, 0.3, 8);
+            const top = new THREE.Mesh(topGeometry, handleMaterial);
+            top.position.y = 1.6;
+            torch.add(top);
+            
+            // Create low-poly flame structure with particles
+            flameGroup = new THREE.Group();
+            
+            // Create stacked, tapering layers - like a flame shape
+            const layers = 14; // Number of horizontal layers
+            
+            // Python syntax symbols and keywords
+            const pythonSymbols = [
+                'def', 'class', 'if', 'else', 'for', 'while', 'return', 'import',
+                'lambda', 'try', 'except', 'with', 'as', 'in', 'not', 'and', 'or',
+                '(', ')', '[', ']', '{', '}', ':', '=', '+', '-', '*', '/', '%',
+                'self', 'True', 'False', 'None', '__init__', 'print', 'len', 'range'
+            ];
+            
+            // Syntax highlighting colors (faded)
+            const syntaxColors = [
+                0x6b8bd6, // Blue - keywords (def, class, if, for, while)
+                0x8b7bd6, // Purple - functions/methods
+                0xd67b9f, // Pink - strings/special
+                0x7bd6a8, // Green - operators
+                0xd6a87b, // Orange - numbers/constants
+                0x999999  // Gray - punctuation
+            ];
+            
+            for (let layer = 0; layer < layers; layer++) {
+                const heightRatio = layer / layers;
+                const yPos = 2.0 + heightRatio * 3.0; // Height from 2.0 to 5.0
+                
+                // Flame taper: wider in middle, narrower at base and top
+                let baseRadius;
+                if (heightRatio < 0.3) {
+                    // Bottom - narrow
+                    baseRadius = 0.3 + heightRatio * 2;
+                } else if (heightRatio < 0.7) {
+                    // Middle - wider
+                    baseRadius = 0.9 - (heightRatio - 0.3) * 0.5;
+                } else {
+                    // Top - tapering to point
+                    baseRadius = 0.7 * (1 - heightRatio) * 1.5;
+                }
+                
+                // Number of particles per ring
+                const particlesInRing = Math.floor(18 - layer * 1.1);
+                
+                // Create polygonal ring for this layer
+                for (let i = 0; i < particlesInRing; i++) {
+                    const angle = (i / particlesInRing) * Math.PI * 2;
+                    
+                    // Add some irregular offset for organic flame look
+                    const radiusOffset = (Math.random() - 0.5) * 0.2;
+                    const angleOffset = (Math.random() - 0.5) * 0.4;
+                    const heightOffset = (Math.random() - 0.5) * 0.15;
+                    
+                    const radius = baseRadius + radiusOffset;
+                    const finalAngle = angle + angleOffset;
+                    
+                    const x = Math.cos(finalAngle) * radius;
+                    const z = Math.sin(finalAngle) * radius;
+                    const y = yPos + heightOffset;
+                    
+                    // Create text sprite with Python symbol
+                    const symbol = pythonSymbols[Math.floor(Math.random() * pythonSymbols.length)];
+                    const symbolColor = syntaxColors[Math.floor(Math.random() * syntaxColors.length)];
+                    
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = 128;
+                    canvas.height = 128;
+                    
+                    context.fillStyle = '#' + symbolColor.toString(16).padStart(6, '0');
+                    context.font = 'bold 48px Courier New';
+                    context.textAlign = 'center';
+                    context.textBaseline = 'middle';
+                    context.fillText(symbol, 64, 64);
+                    
+                    const texture = new THREE.CanvasTexture(canvas);
+                    const particleMaterial = new THREE.SpriteMaterial({
+                        map: texture,
+                        transparent: true,
+                        opacity: 0.6
+                    });
+                    
+                    const particle = new THREE.Sprite(particleMaterial);
+                    particle.scale.set(0.3, 0.3, 1);
+                    particle.position.set(x, y, z);
+                    
+                    flameGroup.add(particle);
+                    
+                    // Store particle data for animation
+                    particles.push({
+                        mesh: particle,
+                        baseX: x,
+                        baseY: y,
+                        baseZ: z,
+                        angle: finalAngle,
+                        radius: radius,
+                        layer: layer,
+                        speed: 0.3 + Math.random() * 0.5,
+                        swayPhase: Math.random() * Math.PI * 2,
+                        risePhase: Math.random() * Math.PI * 2
+                    });
+                }
+            }
+            
+            torch.add(flameGroup);
+            
+            // Add code text inside flame
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 512;
+            canvas.height = 64;
+            
+            codeSnippets.forEach((code, i) => {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.fillStyle = '#666666';
+                context.font = '18px Courier New';
+                context.fillText(code, 10, 40);
+                
+                const texture = new THREE.CanvasTexture(canvas.cloneNode());
+                texture.needsUpdate = true;
+                
+                const material = new THREE.SpriteMaterial({ 
+                    map: texture,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                const sprite = new THREE.Sprite(material);
+                sprite.scale.set(2.2, 0.35, 1);
+                
+                const angle = (i / codeSnippets.length) * Math.PI * 2;
+                const radius = 0.25 + (i % 3) * 0.12;
+                sprite.position.set(
+                    Math.cos(angle) * radius,
+                    2.5 + (i % 6) * 0.45,
+                    Math.sin(angle) * radius
+                );
+                
+                torch.add(sprite);
+                codeTexts.push({ sprite });
+            });
+            
+            scene.add(torch);
+            
+            window.addEventListener('scroll', onScroll);
+            window.addEventListener('resize', onResize);
+            
+            animate();
+        }
+        
+        function onScroll() {
+            const maxScroll = document.body.scrollHeight - window.innerHeight;
+            scrollProgress = window.scrollY / maxScroll;
+        }
+        
+        function onResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Subtle torch tilt based on scroll
+            torch.rotation.x = Math.sin(scrollProgress * Math.PI) * 0.15;
+            torch.rotation.z = Math.cos(scrollProgress * Math.PI) * 0.1;
+            
+            // Animate individual particles - flowing upward and swaying
+            particles.forEach((particle, i) => {
+                // Scroll creates upward flow and turbulence
+                const scrollInfluence = scrollProgress * 10;
+                const turbulence = scrollProgress * 5;
+                
+                // Upward rise based on scroll (particles flow up)
+                const riseAmount = (scrollInfluence * particle.speed) % 3.5;
+                const newY = particle.baseY + riseAmount;
+                
+                // Reset particle to bottom if it goes too high
+                let finalY = newY;
+                if (newY > 5.5) {
+                    finalY = particle.baseY - (newY - 5.5);
+                }
+                
+                // Sideways turbulent flow
+                const turbulentX = Math.sin(scrollInfluence * particle.speed + particle.swayPhase) * 0.15 * turbulence;
+                const turbulentZ = Math.cos(scrollInfluence * particle.speed + particle.risePhase) * 0.15 * turbulence;
+                
+                // Radial expansion as particles rise
+                const heightRatio = (finalY - 2.0) / 3.5;
+                const expansionFactor = 1 + (Math.sin(heightRatio * Math.PI) * 0.3 * turbulence);
+                
+                // Calculate flowing position
+                const flowRadius = particle.radius * expansionFactor;
+                const flowAngle = particle.angle + turbulentX * 2;
+                
+                const newX = Math.cos(flowAngle) * flowRadius + turbulentX;
+                const newZ = Math.sin(flowAngle) * flowRadius + turbulentZ;
+                
+                // Apply flowing position
+                particle.mesh.position.x = newX;
+                particle.mesh.position.y = finalY;
+                particle.mesh.position.z = newZ;
+                
+                // Fade particles at top
+                const fadeRatio = Math.max(0, 1 - (finalY - 4.5) / 1.0);
+                particle.mesh.material.opacity = 0.6 * fadeRatio;
+            });
+            
+            // Rotate code text sprites to face camera
+            codeTexts.forEach((textObj) => {
+                textObj.sprite.lookAt(camera.position);
+            });
+            
+            // Camera orbits slowly around the torch
+            const orbitAngle = scrollProgress * Math.PI * 2;
+            camera.position.x = Math.sin(orbitAngle) * 8;
+            camera.position.y = 4 + scrollProgress * 2;
+            camera.position.z = Math.cos(orbitAngle) * 8;
+            camera.lookAt(0, 3.5, 0);
+            
+            renderer.render(scene, camera);
+        }
+        
+        init();
+    </script>
+</body>
+</html>
