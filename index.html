@@ -91,6 +91,34 @@
             transition: all 0.3s ease;
         }
         
+        #dashboard-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            height: 40px;
+            background: transparent;
+            border: 2px solid #ddd;
+            cursor: pointer;
+            z-index: 1000;
+            pointer-events: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            color: #666;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        
+        #dashboard-button:hover {
+            background: #ddd;
+            border-color: #999;
+            color: #333;
+        }
+        
         #menu-toggle span {
             width: 24px;
             height: 2px;
@@ -290,46 +318,39 @@
             transform: translateX(-50%);
             z-index: 100;
             pointer-events: none;
-            opacity: 0.4;
-            transition: opacity 0.3s ease;
+            animation: pulse 2s ease-in-out infinite;
         }
         
         #scroll-indicator.hidden {
             opacity: 0;
+            animation: none;
         }
         
         .scroll-arrow {
-            width: 30px;
-            height: 50px;
-            border: 2px solid #999;
-            border-radius: 20px;
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 20px solid #ddd;
             position: relative;
+            animation: bounce 1.5s ease-in-out infinite;
         }
         
-        .scroll-arrow::before {
-            content: '';
-            position: absolute;
-            top: 8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 6px;
-            height: 6px;
-            background: #999;
-            border-radius: 50%;
-            animation: scrollDown 2s infinite;
-        }
-        
-        @keyframes scrollDown {
-            0% {
-                top: 8px;
-                opacity: 1;
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.6;
             }
             50% {
-                opacity: 0.5;
+                opacity: 1;
             }
-            100% {
-                top: 32px;
-                opacity: 0;
+        }
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(10px);
             }
         }
         
@@ -370,6 +391,8 @@
         <span></span>
         <span></span>
     </div>
+    
+    <div id="dashboard-button">Dashboard</div>
     
     <div id="slide-menu">
         <ul>
@@ -456,6 +479,10 @@
     
     <div id="canvas-container"></div>
     <div id="content"></div>
+    
+    <div id="scroll-indicator">
+        <div class="scroll-arrow"></div>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
@@ -499,18 +526,41 @@
         const menuToggle = document.getElementById('menu-toggle');
         const slideMenu = document.getElementById('slide-menu');
         const leaderboard = document.getElementById('leaderboard');
+        const dashboardButton = document.getElementById('dashboard-button');
         
         menuToggle.addEventListener('click', () => {
             menuToggle.classList.toggle('active');
             slideMenu.classList.toggle('active');
         });
         
-        // Show leaderboard after scrolling a bit
+        dashboardButton.addEventListener('click', () => {
+            window.location.href = 'https://tinytorch.netlify.app/dashboard';
+        });
+        
+        // Set random color for scroll arrow on each page load
+        const scrollArrow = document.querySelector('.scroll-arrow');
+        const colors = [
+            '#6b8bd6', // Blue - Keywords
+            '#999999', // Gray - Punctuation
+            '#8b7bd6', // Purple - Functions
+            '#7bd6a8', // Green - Operators
+            '#d67b9f', // Pink - Strings/special
+            '#d6a87b'  // Orange
+        ];
+        
+        // Randomly select a color on each page load
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        scrollArrow.style.borderTopColor = randomColor;
+        
+        // Show leaderboard after scrolling a bit and hide scroll indicator
+        const scrollIndicator = document.getElementById('scroll-indicator');
         window.addEventListener('scroll', () => {
             if (window.scrollY > 300) {
                 leaderboard.classList.add('visible');
+                scrollIndicator.classList.add('hidden');
             } else {
                 leaderboard.classList.remove('visible');
+                scrollIndicator.classList.remove('hidden');
             }
         });
         
