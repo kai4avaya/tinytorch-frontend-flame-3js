@@ -15,6 +15,44 @@
             font-family: 'Courier New', monospace;
             background: #fafafa;
             overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Hero Header */
+        #hero-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 60px 20px;
+            text-align: center;
+            z-index: 100;
+            pointer-events: none;
+        }
+        
+        .hero-title {
+            font-size: 4em;
+            font-weight: bold;
+            color: #333;
+            letter-spacing: 4px;
+            margin: 0;
+            line-height: 1.2;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.8em;
+            color: #666;
+            letter-spacing: 2px;
+            margin: 15px 0 0 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .char {
+            display: inline-block;
+            transition: all 0.3s ease-out;
+            will-change: transform, opacity;
         }
         
         #canvas-container {
@@ -113,31 +151,220 @@
             color: #333;
         }
         
-        .info {
-            position: absolute;
+        /* Leaderboard Styles */
+        /* Leaderboard Styles */
+        #leaderboard {
+            position: fixed;
+            right: -450px;
             top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            color: #999;
+            transform: translateY(-50%);
+            width: 420px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            z-index: 500;
             pointer-events: auto;
+            transition: right 0.5s ease;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
         }
         
-        h1 {
-            font-size: 3em;
-            margin-bottom: 0.5em;
-            font-weight: normal;
-            letter-spacing: 2px;
+        #leaderboard.visible {
+            right: 20px;
         }
         
-        p {
-            font-size: 1em;
-            opacity: 0.7;
+        #leaderboard h2 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #6b8bd6;
+            text-align: center;
             letter-spacing: 1px;
+            border-bottom: 2px solid #6b8bd6;
+            padding-bottom: 10px;
+        }
+        
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .leaderboard-table th {
+            padding: 12px 8px;
+            text-align: left;
+            font-size: 0.85em;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .leaderboard-table th.rank {
+            color: #999999;
+            width: 40px;
+        }
+        
+        .leaderboard-table th.name {
+            color: #8b7bd6;
+        }
+        
+        .leaderboard-table th.speed {
+            color: #7bd6a8;
+            text-align: center;
+        }
+        
+        .leaderboard-table th.accuracy {
+            color: #d67b9f;
+            text-align: center;
+        }
+        
+        .leaderboard-table th.total {
+            color: #d6a87b;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .leaderboard-table td {
+            padding: 10px 8px;
+            font-size: 0.9em;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .leaderboard-table tr:hover {
+            background: rgba(107, 139, 214, 0.05);
+        }
+        
+        .leaderboard-table td.rank {
+            color: #999999;
+            font-weight: bold;
+        }
+        
+        .leaderboard-table td.name {
+            color: #8b7bd6;
+        }
+        
+        .leaderboard-table td.speed {
+            color: #7bd6a8;
+            text-align: center;
+        }
+        
+        .leaderboard-table td.accuracy {
+            color: #d67b9f;
+            text-align: center;
+        }
+        
+        .leaderboard-table td.total {
+            color: #d6a87b;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .rank-badge {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            border-radius: 50%;
+            background: #f5f5f5;
+        }
+        
+        .rank-badge.first {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #fff;
+        }
+        
+        .rank-badge.second {
+            background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+            color: #666;
+        }
+        
+        .rank-badge.third {
+            background: linear-gradient(135deg, #cd7f32, #daa520);
+            color: #fff;
+        }
+        
+        /* Scroll Indicator */
+        #scroll-indicator {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0.4;
+            transition: opacity 0.3s ease;
+        }
+        
+        #scroll-indicator.hidden {
+            opacity: 0;
+        }
+        
+        .scroll-arrow {
+            width: 30px;
+            height: 50px;
+            border: 2px solid #999;
+            border-radius: 20px;
+            position: relative;
+        }
+        
+        .scroll-arrow::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background: #999;
+            border-radius: 50%;
+            animation: scrollDown 2s infinite;
+        }
+        
+        @keyframes scrollDown {
+            0% {
+                top: 8px;
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                top: 32px;
+                opacity: 0;
+            }
+        }
+        
+        /* Table scrollable container */
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .table-container::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+        
+        .table-container::-webkit-scrollbar-thumb {
+            background: #8b7bd6;
+            border-radius: 4px;
+        }
+        
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #6b5bb6;
         }
     </style>
 </head>
 <body>
+    <div id="hero-header">
+        <h1 class="hero-title"></h1>
+        <p class="hero-subtitle"></p>
+    </div>
+    
     <div id="menu-toggle">
         <span></span>
         <span></span>
@@ -154,23 +381,137 @@
         </ul>
     </div>
     
-    <div id="canvas-container"></div>
-    <div id="content">
-        <div class="info">
-            <h1>[ SCROLL ]</h1>
-            <p>— Explore the Flame —</p>
-        </div>
+    <div id="leaderboard">
+        <h2>TINY TORCH LEADERBOARD</h2>
+        <table class="leaderboard-table">
+            <thead>
+                <tr>
+                    <th class="rank">#</th>
+                    <th class="name">Name</th>
+                    <th class="speed">Speed</th>
+                    <th class="accuracy">Accuracy</th>
+                    <th class="total">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="rank"><span class="rank-badge first">1</span></td>
+                    <td class="name">@CodeBlazer</td>
+                    <td class="speed">98</td>
+                    <td class="accuracy">99</td>
+                    <td class="total">197</td>
+                </tr>
+                <tr>
+                    <td class="rank"><span class="rank-badge second">2</span></td>
+                    <td class="name">@PyroMaster</td>
+                    <td class="speed">95</td>
+                    <td class="accuracy">97</td>
+                    <td class="total">192</td>
+                </tr>
+                <tr>
+                    <td class="rank"><span class="rank-badge third">3</span></td>
+                    <td class="name">@FlameRunner</td>
+                    <td class="speed">92</td>
+                    <td class="accuracy">96</td>
+                    <td class="total">188</td>
+                </tr>
+                <tr>
+                    <td class="rank"><span class="rank-badge">4</span></td>
+                    <td class="name">@TorchTitan</td>
+                    <td class="speed">90</td>
+                    <td class="accuracy">94</td>
+                    <td class="total">184</td>
+                </tr>
+                <tr>
+                    <td class="rank"><span class="rank-badge">5</span></td>
+                    <td class="name">@SparkDev</td>
+                    <td class="speed">88</td>
+                    <td class="accuracy">93</td>
+                    <td class="total">181</td>
+                </tr>
+                <tr>
+                    <td class="rank"><span class="rank-badge">6</span></td>
+                    <td class="name">@IgniteCode</td>
+                    <td class="speed">85</td>
+                    <td class="accuracy">91</td>
+                    <td class="total">176</td>
+                </tr>
+                <tr>
+                    <td class="rank"><span class="rank-badge">7</span></td>
+                    <td class="name">@BurnCycle</td>
+                    <td class="speed">83</td>
+                    <td class="accuracy">89</td>
+                    <td class="total">172</td>
+                </tr>
+                <tr>
+                    <td class="rank"><span class="rank-badge">8</span></td>
+                    <td class="name">@FireStorm</td>
+                    <td class="speed">80</td>
+                    <td class="accuracy">87</td>
+                    <td class="total">167</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
+    
+    <div id="canvas-container"></div>
+    <div id="content"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
+        // Initialize hero header with scattered text effect
+        const heroTitle = document.querySelector('.hero-title');
+        const heroSubtitle = document.querySelector('.hero-subtitle');
+        
+        const titleText = 'TINYTORCH';
+        const subtitleText = 'Build Your Own ML Framework Leaderboard';
+        
+        // Split text into individual characters
+        function wrapChars(element, text) {
+            element.innerHTML = text.split('').map((char, i) => 
+                `<span class="char" data-index="${i}">${char === ' ' ? '&nbsp;' : char}</span>`
+            ).join('');
+        }
+        
+        wrapChars(heroTitle, titleText);
+        wrapChars(heroSubtitle, subtitleText);
+        
+        // Scatter characters on scroll
+        window.addEventListener('scroll', () => {
+            const scrollY = window.scrollY;
+            const chars = document.querySelectorAll('.char');
+            
+            chars.forEach((char, i) => {
+                const speed = 1 + (i % 5) * 0.3;
+                const angle = (i * 30) * Math.PI / 180;
+                const distance = scrollY * speed * 0.5;
+                
+                const x = Math.cos(angle) * distance;
+                const y = Math.sin(angle) * distance - scrollY * 0.8;
+                const rotation = scrollY * (i % 2 === 0 ? 1 : -1) * 0.5;
+                
+                char.style.transform = `translate(${x}px, ${y}px) rotate(${rotation}deg)`;
+                char.style.opacity = Math.max(0, 1 - scrollY / 500);
+            });
+        });
+        
         // Menu functionality
         const menuToggle = document.getElementById('menu-toggle');
         const slideMenu = document.getElementById('slide-menu');
+        const leaderboard = document.getElementById('leaderboard');
         
         menuToggle.addEventListener('click', () => {
             menuToggle.classList.toggle('active');
             slideMenu.classList.toggle('active');
+        });
+        
+        // Show leaderboard after scrolling a bit
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                leaderboard.classList.add('visible');
+            } else {
+                leaderboard.classList.remove('visible');
+            }
         });
         
         // Three.js
